@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Automatismes 5ème — Entraînement</title>
+<style>
+  :root {
+    --blue: #1F4E79; --orange: #C55A11; --green: #2E7D32; --red: #C00000;
+    --bg: #ffffff; --card: #F3F7FB; --text: #232323; --muted: #6b6b6b; --border: #D5DEE8; --pad: #E9EEF4;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161a1f; --card: #202730; --text: #eceff3; --muted: #9aa5b1; --border: #33404f; --pad: #26303b;
+      --blue: #7fb0e0; --green: #6cc070; --red: #ff7b72; --orange: #f0a060;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161a1f; --card: #202730; --text: #eceff3; --muted: #9aa5b1; --border: #33404f; --pad: #26303b;
+    --blue: #7fb0e0; --green: #6cc070; --red: #ff7b72; --orange: #f0a060;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, "Segoe UI", Calibri, Arial, sans-serif;
+    padding: 16px 14px 290px; max-width: 720px; margin-left: auto; margin-right: auto;
+  }
+  h1 { color: var(--blue); text-align: center; font-size: 1.55rem; margin: 4px 0 2px; }
+  .sub { text-align: center; color: var(--muted); font-size: .95rem; margin-bottom: 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin-bottom: 10px; }
+  .chip {
+    padding: 9px 12px; border-radius: 999px; border: 2px solid var(--blue); background: var(--bg);
+    color: var(--blue); font-weight: 700; font-size: .92rem; cursor: pointer; line-height: 1.25; min-height: 40px;
+  }
+  .chip.active { background: var(--blue); color: #fff; }
+  .opts { display: flex; justify-content: center; margin-bottom: 10px; font-size: .95rem; color: var(--muted); }
+  .opts label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .opts input { width: 20px; height: 20px; }
+  .status { display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: var(--blue); margin: 4px 2px 6px; }
+  .bar { height: 8px; background: var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
+  .bar > div { height: 100%; background: var(--blue); width: 0%; transition: width .3s; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px 14px 16px; text-align: center; }
+  .cat { color: var(--muted); font-style: italic; font-size: .95rem; margin-bottom: 4px; }
+  .q { font-size: 2.6rem; font-weight: 800; min-height: 74px; line-height: 1.2; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; }
+  .blank { display: inline-block; min-width: 54px; border-bottom: 5px solid var(--orange); height: 40px; }
+  #ans {
+    width: 190px; font-size: 2rem; text-align: center; padding: 8px; margin-top: 8px;
+    border: 3px solid var(--blue); border-radius: 12px; background: var(--bg); color: var(--text);
+  }
+  #ans.ok { border-color: var(--green); background: rgba(46,125,50,.15); }
+  #ans.ko { border-color: var(--red); background: rgba(192,0,0,.12); }
+  .timer { height: 7px; background: var(--border); border-radius: 6px; overflow: hidden; margin: 10px auto 0; max-width: 260px; display: none; }
+  .timer > div { height: 100%; background: var(--orange); width: 100%; }
+  .fb { min-height: 52px; margin-top: 10px; font-weight: 700; font-size: 1.1rem; }
+  .fb.ok { color: var(--green); } .fb.ko { color: var(--red); }
+  .fb small { display: block; color: var(--muted); font-weight: 400; font-size: .92rem; margin-top: 3px; }
+  .big { margin-top: 10px; padding: 12px 22px; border: none; border-radius: 12px; color: #fff; font-weight: 800; font-size: 1.1rem; cursor: pointer; background: var(--orange); line-height: 1.3; min-height: 50px; }
+  .big.next { background: var(--blue); }
+  .res h2 { color: var(--blue); margin: 4px 0 6px; }
+  .res .score { font-size: 3rem; font-weight: 800; color: var(--green); }
+  .res table { margin: 10px auto; border-collapse: collapse; font-size: 1rem; }
+  .res td { padding: 5px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+  .res td:last-child { text-align: right; font-weight: 700; }
+
+  .opts2 { display: flex; gap: 14px; justify-content: center; margin-top: 12px; }
+  .opt { min-width: 96px; padding: 14px 26px; font-size: 1.9rem; font-weight: 800; border-radius: 12px; border: 3px solid var(--blue); background: var(--bg); color: var(--text); cursor: pointer; line-height: 1.2; }
+  .opt.sel { background: var(--blue); color: #fff; }
+  .opt.good { border-color: var(--green); background: rgba(46,125,50,.2); }
+  .opt.bad { border-color: var(--red); background: rgba(192,0,0,.15); }
+  .card svg { width: 100%; height: auto; display: block; margin: 4px 0 2px; }
+  .q.small { font-size: 1.6rem; font-weight: 700; min-height: 40px; }
+  .topbar { display: flex; justify-content: center; margin: 0 0 8px; }
+  .bilanBtn { padding: 8px 16px; border-radius: 999px; border: 2px solid var(--orange); background: var(--bg); color: var(--orange); font-weight: 800; font-size: .95rem; cursor: pointer; line-height: 1.25; min-height: 38px; }
+  .bil h2 { color: var(--blue); margin: 4px 0 8px; }
+  .bil input.nom { width: 220px; font-size: 1.3rem; text-align: center; padding: 8px; border: 3px solid var(--blue); border-radius: 12px; background: var(--bg); color: var(--text); }
+  .bil .date { color: var(--muted); margin: 6px 0 4px; }
+  .bil .total { font-size: 1.6rem; font-weight: 800; color: var(--green); margin: 4px 0; }
+  .bil table { margin: 10px auto; border-collapse: collapse; width: 100%; max-width: 520px; }
+  .bil td, .bil th { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; font-size: .98rem; }
+  .bil th { color: var(--muted); font-weight: 700; }
+  .bil td.r { text-align: right; font-weight: 700; white-space: nowrap; }
+  .bil .a { color: var(--red); font-weight: 700; } .bil .b { color: var(--green); font-weight: 700; }
+  .bil .cap { margin: 10px 0 2px; padding: 10px; border: 2px dashed var(--orange); border-radius: 12px; font-weight: 700; }
+  #pad {
+    position: fixed; left: 0; right: 0; bottom: 0; background: var(--pad); border-top: 2px solid var(--border);
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px)); display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; z-index: 20;
+  }
+  #pad button {
+    flex: 1 1 56px; max-width: 86px; height: 54px; font-size: 1.45rem; font-weight: 800; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer;
+  }
+  #pad button.fn { background: var(--blue); color: #fff; border-color: var(--blue); }
+  #pad button.go { background: var(--orange); color: #fff; border-color: var(--orange); flex: 2 1 110px; max-width: 170px; font-size: 1.1rem; }
+</style>
+</head>
+<body>
+
+<h1>Automatismes — entraînement</h1>
+<div class="sub">5ème · des questions différentes à chaque série</div>
+
+<div class="topbar"><button class="bilanBtn" id="bilanBtn">📊 Mon bilan</button></div>
+<div class="chips" id="chips"></div>
+<div class="opts"><label><input type="checkbox" id="chrono"> Mode chrono (comme à l'évaluation)</label></div>
+
+<div id="zone"></div>
+<div id="pad" aria-label="Clavier"></div>
+
+<script>
+// ============ Outils ============
+const rint = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const pick = arr => arr[rint(0, arr.length - 1)];
+const fmt = n => String(Math.round(n * 1000) / 1000).replace('.', ',');
+const dec1 = tenths => fmt(tenths / 10);          // 47 -> "4,7"
+
+// ============ Générateurs ============
+// Chaque générateur renvoie { html, texte, rep, mode:'exact'|'estim', exact?, astuce, t }
+function genTable() {
+  const a = rint(3, 9), b = rint(3, 9);
+  return { html: `${a} × ${b} = ?`, texte: `${a} × ${b}`, rep: a * b, mode: 'exact', t: 20,
+           astuce: `Récite la table de ${a} : ${a} × ${b} = ${a * b}.` };
+}
+function genTrous() {
+  const a = rint(3, 9), b = rint(3, 9), p = a * b;
+  const trou = '<span class="blank"></span>';
+  if (Math.random() < 0.5)
+    return { html: `${a} × ${trou} = ${p}`, texte: `${a} × ? = ${p}`, rep: b, mode: 'exact', t: 20, astuce: `Cherche combien de fois ${a} rentre dans ${p} : ${p} ÷ ${a} = ${b}.` };
+  return { html: `${trou} × ${b} = ${p}`, texte: `? × ${b} = ${p}`, rep: a, mode: 'exact', t: 20, astuce: `Cherche combien de fois ${b} rentre dans ${p} : ${p} ÷ ${b} = ${a}.` };
+}
+function genDM() {
+  if (Math.random() < 0.5) {
+    const n = rint(12, 98);
+    return { html: `Le double de ${n} = ?`, texte: `double de ${n}`, rep: 2 * n, mode: 'exact', t: 20, astuce: `Le double, c'est × 2 : ${n} × 2 = ${2 * n}.` };
+  }
+  const m = 2 * rint(11, 49);
+  return { html: `La moitié de ${m} = ?`, texte: `moitié de ${m}`, rep: m / 2, mode: 'exact', t: 20, astuce: `La moitié, c'est ÷ 2 : ${m} ÷ 2 = ${m / 2}.` };
+}
+function genCalcul() {
+  if (Math.random() < 0.5) {
+    let a, b;
+    do { a = rint(21, 79); b = rint(11, 69); } while (Math.random() < 0.6 && (a % 10) + (b % 10) < 10);
+    return { html: `${a} + ${b} = ?`, texte: `${a} + ${b}`, rep: a + b, mode: 'exact', t: 20, astuce: `Additionne les dizaines puis les unités : ${a} + ${b} = ${a + b}.` };
+  }
+  let a, b;
+  do { a = rint(41, 99); b = rint(12, a - 11); } while (Math.random() < 0.6 && (b % 10) <= (a % 10));
+  return { html: `${a} − ${b} = ?`, texte: `${a} − ${b}`, rep: a - b, mode: 'exact', t: 20, astuce: `Retire ${b} à ${a} en deux temps : ${a} − ${b} = ${a - b}.` };
+}
+function genDecimaux() {
+  if (Math.random() < 0.5) {
+    let A, B;
+    do { A = rint(11, 99); B = rint(11, 99); } while (A % 10 === 0 || B % 10 === 0 || (Math.random() < 0.6 && (A % 10) + (B % 10) < 10));
+    return { html: `${dec1(A)} + ${dec1(B)} = ?`, texte: `${dec1(A)} + ${dec1(B)}`, rep: (A + B) / 10, mode: 'exact', t: 20,
+             astuce: `Aligne les virgules : ${dec1(A)} + ${dec1(B)} = ${dec1(A + B)}.` };
+  }
+  let A, B;
+  do { A = rint(31, 199); B = rint(11, A - 10); } while (A % 10 === 0 || B % 10 === 0);
+  return { html: `${dec1(A)} − ${dec1(B)} = ?`, texte: `${dec1(A)} − ${dec1(B)}`, rep: (A - B) / 10, mode: 'exact', t: 20,
+           astuce: `Aligne les virgules : ${dec1(A)} − ${dec1(B)} = ${dec1(A - B)}.` };
+}
+const CONV = [['m','cm',100], ['km','m',1000], ['kg','g',1000], ['L','mL',1000], ['h','min',60], ['min','s',60], ['cm','mm',10]];
+function genConversion() {
+  const [u1, u2, f] = pick(CONV);
+  const k = Math.random() < 0.55 ? 1 : rint(2, 5);
+  const trou = '<span class="blank"></span>';
+  return { html: `${k} ${u1} = ${trou} ${u2}`, texte: `${k} ${u1} en ${u2}`, rep: k * f, mode: 'exact', t: 20,
+           astuce: k === 1 ? `1 ${u1} = ${f} ${u2}.` : `1 ${u1} = ${f} ${u2}, donc ${k} ${u1} = ${k} × ${f} = ${k * f} ${u2}.` };
+}
+function genOG() {
+  for (let essai = 0; essai < 200; essai++) {
+    const A = rint(111, 499), B = rint(21, 99);
+    if (A % 10 === 5 || B % 10 === 5 || A % 10 === 0 || B % 10 === 0) continue;
+    const a = A / 10, b = B / 10, ra = Math.round(a), rb = Math.round(b), est = ra * rb, exact = a * b;
+    if (Math.abs(est - exact) / exact > 0.08) continue;
+    return { html: `${dec1(A)} × ${dec1(B)} ≈ ?`, texte: `${dec1(A)} × ${dec1(B)}`, rep: est, mode: 'estim', exact, t: 30,
+             astuce: `On arrondit : ${dec1(A)} ≈ ${ra} et ${dec1(B)} ≈ ${rb}, donc ${ra} × ${rb} = ${est}.` };
+  }
+  return genOG();
+}
+function genDivision() {
+  const b = rint(3, 9), q = rint(3, 12);
+  return { html: `${b * q} ÷ ${b} = ?`, texte: `${b * q} ÷ ${b}`, rep: q, mode: 'exact', t: 20, astuce: `Cherche dans la table de ${b} : ${b} × ${q} = ${b * q}.` };
+}
+function genPrio() {
+  const type = rint(0, 3);
+  let h, v, a, b, c;
+  if (type === 0) { a = rint(2, 20); b = rint(2, 9); c = rint(2, 9); h = `${a} + ${b} × ${c}`; v = a + b * c; }
+  else if (type === 1) { b = rint(2, 6); c = rint(2, 6); a = b * c + rint(1, 15); h = `${a} − ${b} × ${c}`; v = a - b * c; }
+  else if (type === 2) { a = rint(2, 9); b = rint(2, 9); c = rint(2, 9); h = `(${a} + ${b}) × ${c}`; v = (a + b) * c; }
+  else { b = rint(2, 9); a = b + rint(1, 9); c = rint(2, 9); h = `(${a} − ${b}) × ${c}`; v = (a - b) * c; }
+  const astuce = type < 2 ? `La multiplication est prioritaire : on calcule d'abord ${b} × ${c} = ${b * c}.` : `On calcule d'abord la parenthèse, puis on multiplie par ${c}.`;
+  return { html: `${h} = ?`, texte: h, rep: v, mode: 'exact', t: 30, astuce };
+}
+
+// ----- comparaisons -----
+const MINUS = '\u2212';
+const fmtR = n => (n < 0 ? MINUS : '') + fmt(Math.abs(n));
+const SR = n => (n > 0 ? '+' : '') + fmtR(n);
+const r2 = n => Math.round(n * 1000) / 1000;
+function qChoix(a, b, texteA, texteB, astuce, cat) {
+  return { type: 'choice', html: `${texteA} <span class="blank"></span> ${texteB}`, texte: `${texteA} ? ${texteB}`, options: ['<', '>'],
+           correct: a < b ? 0 : 1, mode: 'choice', t: 20, astuce, vals: [a, b] };
+}
+function decimales(n) { const t = String(r2(n)); return t.includes('.') ? t.split('.')[1].length : 0; }
+function genCompDec() {
+  let a, b;
+  for (let essai = 0; essai < 50; essai++) {
+    const p = rint(0, 3), x = rint(0, 12), y = rint(1, 9);
+    if (p === 0) { a = x + y / 10; b = x + y / 100; }            // 3,2 et 3,02
+    else if (p === 1) { a = x + y / 10; b = a + (coinOK() ? 0.05 : -0.05); }   // 3,2 et 3,25
+    else if (p === 2) { a = x + y / 10; b = x + (y * 10 + rint(1, 9)) / 100; } // 4,5 et 4,57
+    else { a = x + y / 10; b = x + (10 * y - 10 + rint(1, 9)) / 100; }                 // 3,2 et 3,17
+    a = r2(a); b = r2(b);
+    if (Math.abs(a - b) > 1e-9 && b > 0) break;
+  }
+  if (coinOK()) [a, b] = [b, a];
+  const k = Math.max(decimales(a), decimales(b));
+  const pad = n => n.toFixed(k).replace('.', ',');
+  return qChoix(a, b, fmt(a), fmt(b), `Écris les deux nombres avec le même nombre de chiffres après la virgule : ${pad(a)} et ${pad(b)}. On compare alors comme des entiers.`);
+}
+function coinOK() { return Math.random() < 0.5; }
+function genCompRel() {
+  const r = Math.random();
+  let a, b, astuce;
+  if (r < 0.2) {
+    const p = rint(1, 20), n = -rint(1, 20);
+    [a, b] = coinOK() ? [p, n] : [n, p];
+    astuce = 'Tout nombre positif est plus grand que tout nombre négatif.';
+  } else if (r < 0.5) {
+    do { a = -rint(1, 20); b = -rint(1, 20); } while (a === b);
+    astuce = 'Entre deux négatifs, le plus grand est celui qui a la plus petite distance à zéro.';
+  } else {
+    const p = rint(0, 2), x = rint(1, 9), y = rint(1, 9);
+    if (p === 0) { a = -(x + y / 10); b = -(x + y / 100); }       // −2,5 et −2,05
+    else if (p === 1) { a = -x; b = -(x + y / 10); }               // −7 et −7,1
+    else { a = -(x + y / 10); b = -(x + 1 + rint(0, 8) / 10); }    // −3,4 et −4,2
+    a = r2(a); b = r2(b);
+    if (coinOK()) [a, b] = [b, a];
+    astuce = 'Pour deux négatifs, compare les distances à zéro : la plus petite distance donne le plus grand nombre.';
+  }
+  return qChoix(a, b, SR(a), SR(b), astuce);
+}
+
+// ----- distance à zéro, opposé, abscisses -----
+function qNum(html, texte, rep, astuce, t = 20) { return { html, texte, rep, mode: 'exact', t, astuce, small: false }; }
+function decimal() { let t; do { t = rint(11, 99); } while (t % 10 === 0); return t / 10; }
+function genDist() {
+  const r = Math.random(), n = rint(1, 60), d = decimal();
+  if (r < 0.18) return qNum(`|${MINUS}${n}| = ?`, `|-${n}|`, n, `Une valeur absolue est une distance : elle n'est jamais négative. |${MINUS}${n}| = ${n}.`);
+  if (r < 0.30) return qNum(`|${MINUS}${fmt(d)}| = ?`, `|-${d}|`, d, `On enlève le signe : |${MINUS}${fmt(d)}| = ${fmt(d)}.`);
+  if (r < 0.40) return qNum(`|+${n}| = ?`, `|+${n}|`, n, `La distance à zéro de +${n} est ${n}.`);
+  if (r < 0.62) { const x = coinOK() ? n : -n; return qNum(`L'opposé de ${SR(x)} est ?`, `opp ${x}`, -x, `On change le signe : l'opposé de ${SR(x)} est ${SR(-x)}.`); }
+  if (r < 0.74) { const x = coinOK() ? d : -d; return qNum(`L'opposé de ${SR(x)} est ?`, `opp ${x}`, -x, `On change le signe : l'opposé de ${SR(x)} est ${SR(-x)}.`); }
+  if (r < 0.88) { const x = coinOK() ? n : -n; return qNum(`Distance à zéro de ${SR(x)} ?`, `dist ${x}`, Math.abs(x), `La distance à zéro est la valeur absolue : ${Math.abs(x)}.`); }
+  const v = coinOK() ? n : d;
+  return qNum(`Quel nombre négatif a pour distance à zéro ${fmt(v)} ?`, `neg ${v}`, -v, `Il est à ${fmt(v)} de 0, du côté négatif : ${MINUS}${fmt(v)}.`);
+}
+const W = 640, H = 124, X0 = 36, XR = 588, Y = 74;
+const xOf = (d, v) => X0 + (v - d.min) / (d.max - d.min) * (XR - X0);
+function svgDroite(d, points) {
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Droite graduée">`;
+  const tip = XR + 24;
+  s += `<line x1="${X0 - 8}" y1="${Y}" x2="${tip - 12}" y2="${Y}" stroke="var(--blue)" stroke-width="3"/>`;
+  s += `<polygon points="${tip},${Y} ${tip - 14},${Y - 7} ${tip - 14},${Y + 7}" fill="var(--blue)"/>`;
+  for (let i = 0; i <= d.N; i++) { const x = X0 + i * (XR - X0) / d.N; s += `<line x1="${x}" y1="${Y - 9}" x2="${x}" y2="${Y + 9}" stroke="var(--blue)" stroke-width="2.4"/>`; }
+  d.labels.forEach(v => { s += `<text x="${xOf(d, v)}" y="${Y + 30}" text-anchor="middle" font-size="15" font-weight="700" fill="var(--text)">${fmtR(v)}</text>`; });
+  points.forEach(p => {
+    const x = xOf(d, p.v);
+    s += `<line x1="${x - 8}" y1="${Y - 8}" x2="${x + 8}" y2="${Y + 8}" stroke="#E74C3C" stroke-width="4"/><line x1="${x - 8}" y1="${Y + 8}" x2="${x + 8}" y2="${Y - 8}" stroke="#E74C3C" stroke-width="4"/>`;
+    s += `<text x="${x}" y="${Y - 22}" text-anchor="middle" font-size="19" font-weight="800" fill="#E74C3C">${p.name}</text>`;
+  });
+  return s + `</svg>`;
+}
+const CONF_ABS = [
+  { min: -6, max: 6, N: 12, labels: [-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6] },
+  { min: -10, max: 10, N: 10, labels: [-10, 0] }, { min: -15, max: 15, N: 10, labels: [-15, 0] },
+  { min: -12, max: 12, N: 12, labels: [-12, 0] }, { min: -20, max: 20, N: 8, labels: [-20, 0] },
+  { min: -8, max: 8, N: 8, labels: [-8, 8] }, { min: -6, max: 18, N: 12, labels: [-6, 18] },
+  { min: -0.5, max: 0.3, N: 8, labels: [-0.5, 0, 0.3] }
+];
+function genAbs() {
+  const d = pick(CONF_ABS), step = (d.max - d.min) / d.N;
+  let v, half;
+  do { half = Math.random() < 0.45; const i = half ? rint(0, d.N - 1) : rint(0, d.N); v = r2(d.min + (i + (half ? 0.5 : 0)) * step); } while (Math.abs(v) < 1e-9);
+  const nom = 'ABCDEF'[rint(0, 5)];
+  return { visuel: svgDroite(d, [{ name: nom, v }]), html: `Abscisse du point ${nom} ?`, small: true, texte: `abs ${nom} ${d.min} ${d.max} ${d.N} ${v}`, rep: v, mode: 'exact', t: 30,
+           astuce: `Une graduation vaut ${fmtR(step)}. ${nom}(${fmtR(v)})${half ? " : le point est au milieu de deux graduations." : '.'}`, ligne: d };
+}
+
+const CATS = [
+  { id: 'table', nom: 'Tables', gen: genTable },
+  { id: 'trous', nom: 'Tables à trous', gen: genTrous },
+  { id: 'dm', nom: 'Double / Moitié', gen: genDM },
+  { id: 'calcul', nom: 'Calcul mental', gen: genCalcul },
+  { id: 'dec', nom: 'Décimaux (+/−)', gen: genDecimaux },
+  { id: 'compdec', nom: 'Comparer (décimaux)', gen: genCompDec },
+  { id: 'comprel', nom: 'Comparer (relatifs)', gen: genCompRel },
+  { id: 'conv', nom: 'Conversions', gen: genConversion },
+  { id: 'og', nom: 'Ordre de grandeur', gen: genOG },
+  { id: 'div', nom: 'Divisions', gen: genDivision },
+  { id: 'prio', nom: 'Priorités', gen: genPrio },
+  { id: 'dist', nom: 'Distance à zéro / opposé', gen: genDist },
+  { id: 'abs', nom: 'Lire une abscisse', gen: genAbs }
+];
+// En « Mélange », les décimaux et les comparaisons reviennent plus souvent.
+const MIX = ['table', 'trous', 'dm', 'calcul', 'dec', 'dec', 'compdec', 'compdec', 'comprel', 'comprel', 'dist', 'dist', 'abs', 'abs', 'conv', 'og', 'div', 'prio'];
+
+// ============ État ============
+const NB = 10;
+let mode = 'mix';
+let serie = [], idx = 0, score = 0, resultats = [], valide = false, timer = null, tLeft = 0, ansChoice = null, enBilan = false;
+
+// ---- bilan de l'élève (conservé sur l'appareil si le navigateur l'autorise) ----
+const CLE = 'maths5_automatismes_bilan';
+let profil = { nom: '', series: 0, stats: {} };
+try { const sv = localStorage.getItem(CLE); if (sv) profil = Object.assign(profil, JSON.parse(sv)); } catch (e) { /* stockage indisponible : le bilan ne couvre que cette séance */ }
+function sauver() { try { localStorage.setItem(CLE, JSON.stringify(profil)); } catch (e) { } }
+function compter(cat, ok) { const s = profil.stats[cat] = profil.stats[cat] || { ok: 0, n: 0 }; s.n++; if (ok) s.ok++; sauver(); }
+
+function nouvelleSerie() {
+  serie = []; resultats = []; idx = 0; score = 0; valide = false; enBilan = false;
+  const vus = new Set();
+  let garde = 0;
+  while (serie.length < NB && garde++ < 500) {
+    const id = mode === 'mix' ? pick(MIX) : mode;
+    const cat = CATS.find(c => c.id === id);
+    const q = cat.gen();
+    if (vus.has(q.texte)) continue;
+    vus.add(q.texte); q.cat = cat.nom; q.catId = cat.id; serie.push(q);
+  }
+  afficher();
+}
+
+// ============ Interface ============
+const $ = id => document.getElementById(id);
+function chips() {
+  const el = $('chips'); el.innerHTML = '';
+  [{ id: 'mix', nom: '🎲 Mélange' }].concat(CATS).forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (c.id === mode ? ' active' : ''); b.textContent = c.nom;
+    b.onclick = () => { mode = c.id; chips(); nouvelleSerie(); };
+    el.appendChild(b);
+  });
+}
+function setPad(on) { $('pad').style.display = on ? 'flex' : 'none'; document.body.classList.toggle('withpad', on); }
+function afficher() {
+  stopTimer(); enBilan = false;
+  const z = $('zone');
+  if (idx >= NB) { return resume(); }
+  const q = serie[idx];
+  const saisie = q.type === 'choice'
+    ? `<div class="opts2" id="opts">${q.options.map((o, i) => `<button class="opt" data-i="${i}">${o}</button>`).join('')}</div>`
+    : `<input id="ans" type="text" readonly inputmode="none" aria-label="Ta réponse">`;
+  z.innerHTML = `
+    <div class="status"><span>Question ${idx + 1} / ${NB}</span><span>Score : ${score}</span></div>
+    <div class="bar"><div style="width:${(idx / NB) * 100}%"></div></div>
+    <div class="card">
+      <div class="cat">${q.cat}</div>
+      ${q.visuel || ''}
+      <div class="q ${q.small ? 'small' : ''}">${q.html}</div>
+      ${saisie}
+      <div class="timer" id="timer"><div></div></div>
+      <div class="fb" id="fb"></div>
+      <button class="big" id="go">Valider</button>
+    </div>`;
+  valide = false; ansChoice = null;
+  setPad(q.type !== 'choice');
+  $('go').onclick = () => valide ? suivante() : valider(false);
+  if (q.type === 'choice') document.querySelectorAll('.opt').forEach(b => b.onclick = () => { if (valide) return; ansChoice = +b.dataset.i; document.querySelectorAll('.opt').forEach(o => o.classList.remove('sel')); b.classList.add('sel'); });
+  if ($('chrono').checked) startTimer(q.t);
+}
+function parse(v) {
+  const t = String(v).trim().replace(/\u2212/g, '-').replace(/\s/g, '').replace(',', '.');
+  if (t === '' || t === '.' || t === '-') return NaN;
+  return Number(t);
+}
+function estJuste(q, val) {
+  if (isNaN(val)) return false;
+  if (q.mode === 'estim') return Math.abs(val - q.exact) / q.exact <= 0.12;
+  return Math.abs(val - q.rep) < 1e-9;
+}
+function valider(tempsEcoule) {
+  if (valide) return;
+  const q = serie[idx], fb = $('fb');
+  let ok;
+  if (q.type === 'choice') {
+    if (!tempsEcoule && ansChoice === null) { fb.className = 'fb ko'; fb.textContent = 'Choisis < ou > avant de valider.'; return; }
+    valide = true; stopTimer();
+    ok = !tempsEcoule && ansChoice === q.correct;
+    document.querySelectorAll('.opt').forEach((b, i) => { if (i === q.correct) b.classList.add('good'); else if (i === ansChoice) b.classList.add('bad'); });
+    fb.className = 'fb ' + (ok ? 'ok' : 'ko');
+    fb.innerHTML = ok ? `✓ Bravo !<small>${q.astuce}</small>` : `${tempsEcoule ? '⏱ Temps écoulé. ' : '✗ '}La bonne réponse était « ${q.options[q.correct]} ».<small>${q.astuce}</small>`;
+  } else {
+    const inp = $('ans'), val = parse(inp.value);
+    if (!tempsEcoule && isNaN(val)) { fb.className = 'fb ko'; fb.textContent = 'Écris ta réponse avant de valider.'; return; }
+    valide = true; stopTimer();
+    ok = !tempsEcoule && estJuste(q, val);
+    inp.classList.add(ok ? 'ok' : 'ko');
+    fb.className = 'fb ' + (ok ? 'ok' : 'ko');
+    const repTxt = q.mode === 'estim' ? `environ ${fmtR(q.rep)}` : fmtR(q.rep);
+    fb.innerHTML = ok ? '✓ Bravo !' + (q.mode === 'estim' ? `<small>${q.astuce}</small>` : '')
+                      : `${tempsEcoule ? '⏱ Temps écoulé. ' : '✗ '}La réponse était ${repTxt}.<small>${q.astuce}</small>`;
+  }
+  if (ok) score++;
+  resultats.push({ cat: q.cat, ok }); compter(q.cat, ok);
+  const go = $('go'); go.textContent = idx === NB - 1 ? 'Voir mon résultat' : 'Question suivante →'; go.className = 'big next';
+}
+function suivante() { idx++; afficher(); }
+function resume() {
+  setPad(false);
+  profil.series++; sauver();
+  const par = {};
+  resultats.forEach(r => { par[r.cat] = par[r.cat] || { ok: 0, n: 0 }; par[r.cat].n++; if (r.ok) par[r.cat].ok++; });
+  const lignes = Object.entries(par).map(([c, v]) => `<tr><td>${c}</td><td>${v.ok} / ${v.n}</td></tr>`).join('');
+  const msg = score >= 9 ? 'Excellent !' : score >= 7 ? 'Très bien !' : score >= 5 ? 'Bien, continue !' : 'Courage, recommence : tu vas progresser !';
+  $('zone').innerHTML = `<div class="card res"><h2>Résultat</h2><div class="score">${score} / ${NB}</div><div>${msg}</div>
+    <table>${lignes}</table>
+    <button class="big" id="again">Nouvelle série (de nouvelles questions)</button></div>`;
+  $('again').onclick = nouvelleSerie;
+}
+
+// ============ Mon bilan ============
+let confirmEffacer = false;
+function bilan() {
+  stopTimer(); enBilan = true; setPad(false);
+  const noms = CATS.map(c => c.nom);
+  let ok = 0, n = 0;
+  noms.forEach(c => { const v = profil.stats[c]; if (v) { ok += v.ok; n += v.n; } });
+  const lignes = noms.filter(c => profil.stats[c]).map(c => {
+    const v = profil.stats[c], p = Math.round(100 * v.ok / v.n);
+    const flag = v.n >= 5 && p < 60 ? '<span class="a"> à retravailler</span>' : v.n >= 5 && p >= 85 ? '<span class="b"> solide</span>' : '';
+    return `<tr><td>${c}${flag}</td><td class="r">${v.ok} / ${v.n}</td><td class="r">${p} %</td></tr>`;
+  }).join('');
+  const d = new Date().toLocaleDateString('fr-FR');
+  $('zone').innerHTML = `<div class="card res bil"><h2>📊 Mon bilan</h2>
+    <div><input class="nom" id="nom" type="text" placeholder="Mon prénom" value="${(profil.nom || '').replace(/"/g, '&quot;')}" maxlength="30" autocomplete="off"></div>
+    <div class="date">${d} · séries terminées : ${profil.series}</div>
+    <div class="total">${n ? `${ok} / ${n} bonnes réponses` : 'Pas encore de réponse'}</div>
+    ${n ? `<table><tr><th>Catégorie</th><th class="r">Bonnes</th><th class="r">Réussite</th></tr>${lignes}</table>` : ''}
+    <div class="cap">📸 Fais une capture d'écran de cette page et envoie-la à ton professeur.</div>
+    <button class="big next" id="retour">← Retour à l'entraînement</button>
+    <button class="big sec" id="effacer" style="background:var(--muted)">${confirmEffacer ? 'Sûr(e) ? Touche encore pour effacer' : 'Effacer mon bilan'}</button></div>`;
+  $('nom').oninput = e => { profil.nom = e.target.value; sauver(); };
+  $('retour').onclick = () => { confirmEffacer = false; serie.length && idx < NB ? afficher() : nouvelleSerie(); };
+  $('effacer').onclick = () => { if (!confirmEffacer) { confirmEffacer = true; return bilan(); } profil = { nom: '', series: 0, stats: {} }; sauver(); confirmEffacer = false; bilan(); };
+}
+$('bilanBtn').onclick = () => bilan();
+
+// ============ Chrono ============
+function startTimer(sec) {
+  const t = $('timer'); t.style.display = 'block'; tLeft = sec * 10;
+  const bar = t.firstElementChild; bar.style.width = '100%';
+  timer = setInterval(() => {
+    tLeft--; bar.style.width = (tLeft / (sec * 10) * 100) + '%';
+    if (tLeft <= 0) { clearInterval(timer); timer = null; valider(true); }
+  }, 100);
+}
+function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
+$('chrono').addEventListener('change', () => { if (!valide && idx < NB) afficher(); });
+
+// ============ Clavier ============
+function buildPad() {
+  const pad = $('pad');
+  ['1','2','3','4','5','6','7','8','9','0',',','\u2212','⌫'].forEach(k => {
+    const b = document.createElement('button'); b.textContent = k; if (!/\d/.test(k)) b.className = 'fn';
+    b.onclick = () => press(k); pad.appendChild(b);
+  });
+  const g = document.createElement('button'); g.textContent = 'OK ✓'; g.className = 'go'; g.onclick = () => entree(); pad.appendChild(g);
+}
+function press(k) {
+  const inp = $('ans'); if (!inp || valide || enBilan) return;
+  let v = inp.value;
+  if (k === '⌫') v = v.slice(0, -1);
+  else if (k === ',') { if (!v.includes(',') && v.replace(MINUS, '') !== '') v += ','; }
+  else if (k === MINUS) v = v.startsWith(MINUS) ? v.slice(1) : MINUS + v;
+  else if (v.replace(MINUS, '').replace(',', '').length < 6) v += k;
+  inp.value = v; inp.classList.remove('ok', 'ko'); $('fb').textContent = '';
+}
+function entree() { if (idx >= NB || enBilan) return; valide ? suivante() : valider(false); }
+document.addEventListener('keydown', e => {
+  if (enBilan) return;
+  if (/^[0-9]$/.test(e.key)) press(e.key);
+  else if (e.key === ',' || e.key === '.') press(',');
+  else if (e.key === '-' || e.key === MINUS) press(MINUS);
+  else if (e.key === 'Backspace') press('⌫');
+  else if (e.key === 'Enter') entree();
+});
+
+chips(); buildPad(); nouvelleSerie();
+</script>
+</body>
+</html>
