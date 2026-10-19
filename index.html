@@ -1,10 +1,16 @@
+<!--
+  Créé par Mme M'bodji · Collège Jules Vallès, Le Havre · © 2026
+  Merci de conserver cette mention si vous reprenez ou modifiez cette page.
+-->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<meta name="author" content="Créé par Mme M'bodji · Collège Jules Vallès, Le Havre · © 2026">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Automatismes 5ème — Entraînement</title>
 <style>
+/* Créé par Mme M'bodji · Collège Jules Vallès, Le Havre · © 2026 — Merci de conserver cette mention si vous reprenez ou modifiez cette page. */
   :root {
     --blue: #1F4E79; --orange: #C55A11; --green: #2E7D32; --red: #C00000;
     --bg: #ffffff; --card: #F3F7FB; --text: #232323; --muted: #6b6b6b; --border: #D5DEE8; --pad: #E9EEF4;
@@ -95,6 +101,7 @@
   }
   #pad button.fn { background: var(--blue); color: #fff; border-color: var(--blue); }
   #pad button.go { background: var(--orange); color: #fff; border-color: var(--orange); flex: 2 1 110px; max-width: 170px; font-size: 1.1rem; }
+  .mention { text-align: center; color: var(--muted); font-size: .78rem; line-height: 1.4; margin: 24px 0 6px; padding: 0 8px; }
 </style>
 </head>
 <body>
@@ -107,9 +114,11 @@
 <div class="opts"><label><input type="checkbox" id="chrono"> Mode chrono (comme à l'évaluation)</label></div>
 
 <div id="zone"></div>
+<footer class="mention">Créé par Mme M'bodji · Collège Jules Vallès, Le Havre · © 2026</footer>
 <div id="pad" aria-label="Clavier"></div>
 
 <script>
+// Créé par Mme M'bodji · Collège Jules Vallès, Le Havre · © 2026 — Merci de conserver cette mention si vous reprenez ou modifiez cette page.
 // ============ Outils ============
 const rint = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 const pick = arr => arr[rint(0, arr.length - 1)];
@@ -289,6 +298,47 @@ function genAbs() {
            astuce: `Une graduation vaut ${fmtR(step)}. ${nom}(${fmtR(v)})${half ? " : le point est au milieu de deux graduations." : '.'}`, ligne: d };
 }
 
+// ----- statistiques : moyenne et fréquence -----
+function listeMoy(n) {
+  for (let essai = 0; essai < 500; essai++) {
+    const vals = Array.from({ length: n }, () => rint(5, 20)); const t = vals.reduce((a, b) => a + b, 0);
+    if (n === 4 ? t % 2 === 0 : t % n === 0) return vals;
+  }
+  return n === 3 ? [8, 12, 10] : n === 4 ? [6, 9, 15, 14] : [5, 11, 8, 12, 14];
+}
+function genMoy() {
+  if (Math.random() < 0.2) {                 // retrouver la dernière valeur connaissant la moyenne
+    for (let essai = 0; essai < 100; essai++) {
+      const n = rint(3, 5), m = rint(8, 16), vals = [];
+      for (let i = 0; i < n - 1; i++) vals.push(rint(Math.max(3, m - 5), m + 5));
+      const t = vals.reduce((a, b) => a + b, 0), last = m * n - t;
+      if (last >= 1 && last <= 20) {
+        return qNum(`La moyenne de ${n} notes est ${m}. Voici ${n - 1} notes : ${vals.join(' ; ')}. Quelle est la dernière note ?`, `moyinv ${n} ${m} ${vals.join(',')}`, last,
+                    `Il faut un total de ${n} × ${m} = ${m * n}. On enlève ce qu'on a déjà (${t}) : ${m * n} − ${t} = ${last}.`, 40);
+      }
+    }
+  }
+  const n = pick([3, 4, 5]), vals = listeMoy(n), t = vals.reduce((a, b) => a + b, 0), rep = r2(t / n);
+  return qNum(`Moyenne de ${vals.join(' ; ')} ?`, `moy ${vals.join(',')}`, rep, `On additionne : ${vals.join(' + ')} = ${t}, puis on divise par ${n} : ${t} ÷ ${n} = ${fmt(rep)}.`, 40);
+}
+const CONTEXTES = [['élèves', 'portent des lunettes'], ['billes', 'sont rouges'], ['jours', 'sont pluvieux'], ['livres', 'sont des BD'], ['bonbons', 'sont à la fraise'], ['élèves', 'viennent en bus']];
+function genFreq() {
+  const r = Math.random();
+  if (r < 0.2) {                              // décimal -> pourcentage
+    const p = 5 * rint(1, 19);
+    return qNum(`${fmt(p / 100)} = ... %`, `pct ${p}`, p, `Une fréquence de ${fmt(p / 100)} s'écrit ${p} % (on multiplie par 100).`);
+  }
+  for (let essai = 0; essai < 200; essai++) {
+    const N = pick([10, 20, 25, 40, 50, 100]), e = rint(1, N - 1);
+    if ((e * 100) % N !== 0) continue;
+    const p = e * 100 / N, [nom, verbe] = pick(CONTEXTES);
+    if (r < 0.75)
+      return qNum(`Sur ${N} ${nom}, ${e} ${verbe}. Fréquence en % ?`, `freq ${N} ${e} ${nom}`, p, `Fréquence = effectif ÷ effectif total : ${e} ÷ ${N} = ${fmt(p / 100)}, soit ${p} %.`, 40);
+    return qNum(`Calcule ${p} % de ${N}.`, `de ${p} ${N}`, e, `${p} % de ${N}, c'est ${N} × ${fmt(p / 100)} = ${e}.`, 40);
+  }
+  return qNum('Sur 20 élèves, 7 portent des lunettes. Fréquence en % ?', 'freq 20 7', 35, 'Fréquence = effectif ÷ effectif total : 7 ÷ 20 = 0,35, soit 35 %.', 40);
+}
+
 const CATS = [
   { id: 'table', nom: 'Tables', gen: genTable },
   { id: 'trous', nom: 'Tables à trous', gen: genTrous },
@@ -302,10 +352,12 @@ const CATS = [
   { id: 'div', nom: 'Divisions', gen: genDivision },
   { id: 'prio', nom: 'Priorités', gen: genPrio },
   { id: 'dist', nom: 'Distance à zéro / opposé', gen: genDist },
-  { id: 'abs', nom: 'Lire une abscisse', gen: genAbs }
+  { id: 'abs', nom: 'Lire une abscisse', gen: genAbs },
+  { id: 'moy', nom: 'Moyenne', gen: genMoy },
+  { id: 'freq', nom: 'Fréquence en %', gen: genFreq }
 ];
 // En « Mélange », les décimaux et les comparaisons reviennent plus souvent.
-const MIX = ['table', 'trous', 'dm', 'calcul', 'dec', 'dec', 'compdec', 'compdec', 'comprel', 'comprel', 'dist', 'dist', 'abs', 'abs', 'conv', 'og', 'div', 'prio'];
+const MIX = ['table', 'trous', 'dm', 'calcul', 'dec', 'dec', 'compdec', 'compdec', 'comprel', 'comprel', 'dist', 'dist', 'abs', 'abs', 'moy', 'moy', 'freq', 'freq', 'conv', 'og', 'div', 'prio'];
 
 // ============ État ============
 const NB = 10;
